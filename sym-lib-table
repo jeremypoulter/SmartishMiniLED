@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name "SmartishMiniLED-rescue")(type "Legacy")(uri "${KIPRJMOD}/SmartishMiniLED-rescue.lib")(options "")(descr ""))
+  (lib (name "neopixelstrippads")(type "Legacy")(uri "${KIPRJMOD}/neopixelstrippads.lib")(options "")(descr ""))
+)
