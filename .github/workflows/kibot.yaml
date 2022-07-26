@@ -30,12 +30,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: SmartishLight_ESP32
-            schematic: SmartishMiniLED.sch
+          - name: SmartishMiniLED
+            schematic: SmartishMiniLED.kicad_sch
             board: SmartishMiniLED.kicad_pcb
-          - name: SmartishLight_ESP32_tall
-            schematic: SmartishMiniLED.sch
-            board: SmartishMiniLED_tall.kicad_pcb
 
     steps:
     - uses: actions/checkout@v2
@@ -61,13 +58,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: SmartishLight_ESP32
-            schematic: SmartishMiniLED.sch
+          - name: SmartishMiniLED
+            schematic: SmartishMiniLED.kicad_sch
             board: SmartishMiniLED.kicad_pcb
-          - name: SmartishLight_ESP32_tall
-            schematic: SmartishMiniLED.sch
-            board: SmartishMiniLED_tall.kicad_pcb
-
     steps:
     - uses: actions/checkout@v2
 
@@ -102,7 +95,7 @@ jobs:
       run: |
         find artifacts
         version=${GITHUB_REF_NAME}
-        for asset in SmartishLight_ESP32 SmartishLight_ESP32_tall
+        for asset in SmartishMiniLED
         do
           for file in gerbers.zip bom.csv pos.csv
           do
@@ -112,8 +105,8 @@ jobs:
           done
           rm -rf artifacts/$asset
         done
-        mv artifacts/SmartishLight_ESP32-docs/docs/SmartishMiniLED-schematic.pdf artifacts/SmartishLight_ESP32-schematic-$version.pdf
-        for asset in SmartishLight_ESP32-docs SmartishLight_ESP32_tall-docs
+        mv artifacts/SmartishMiniLED-docs/docs/SmartishMiniLED-schematic.pdf artifacts/SmartishMiniLED-schematic-$version.pdf
+        for asset in SmartishMiniLED-docs
         do
           rm -rf artifacts/$asset
         done
