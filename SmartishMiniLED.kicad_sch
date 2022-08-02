@@ -4012,7 +4012,7 @@
     (property "Value" "Antenna_Chip" (id 1) (at 86.36 77.4699 0)
       (effects (font (size 1.27 1.27)) (justify right))
     )
-    (property "Footprint" "RF_Antenna:Texas_SWRA117D_2.4GHz_Right" (id 2) (at 85.09 74.295 0)
+    (property "Footprint" "SmartishMiniLED:Texas_SWRA117D_2.4GHz_Right" (id 2) (at 85.09 74.295 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 85.09 74.295 0)
@@ -4625,7 +4625,7 @@
       (reference "#PWR0123") (unit 1) (value "GND") (footprint "")
     )
     (path "/76b827cb-1c34-444d-8423-f6c16b1077b9"
-      (reference "AE1") (unit 1) (value "Antenna_Chip") (footprint "RF_Antenna:Texas_SWRA117D_2.4GHz_Right")
+      (reference "AE1") (unit 1) (value "Antenna_Chip") (footprint "SmartishMiniLED:Texas_SWRA117D_2.4GHz_Right")
     )
     (path "/00000000-0000-0000-0000-00005f9ef301"
       (reference "C1") (unit 1) (value "10uF") (footprint "Capacitor_SMD:C_0805_2012Metric")
