@@ -69,6 +69,7 @@ jobs:
   fabrications:
     name: Fabrication
     runs-on: ubuntu-latest
+    needs: [DRC]
 
     strategy:
       fail-fast: false
