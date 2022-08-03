@@ -455,5 +455,8 @@
       ""
     ]
   ],
-  "text_variables": {}
+  "text_variables": {
+    "date": "2022-08-02",
+    "version": "d02d224"
+  }
 }
