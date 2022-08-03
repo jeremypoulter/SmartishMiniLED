@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ERC]
     container:
-      image: setsoft/kicad_auto:ki6_v2
+      image: setsoft/kicad_auto:ki6
     steps:
       - uses: actions/checkout@v2
       - name: run kibot
