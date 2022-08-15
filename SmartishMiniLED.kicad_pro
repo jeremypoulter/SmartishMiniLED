@@ -385,7 +385,6 @@
         "name": "Power",
         "nets": [
           "+5V",
-          "Net-(F1-Pad1)",
           "VBUS"
         ],
         "pcb_color": "rgba(0, 0, 0, 0.000)",
