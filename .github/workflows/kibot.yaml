@@ -83,7 +83,7 @@ jobs:
 
     - name: Export JLCPCB fabrication files
       run: |
-        ${{ env.KIKIT }} fab jlcpcb --assembly --schematic ${{ matrix.schematic }} --ignore J2,JP1 ${{ matrix.board }} ${{ matrix.name }}
+        ${{ env.KIKIT }} fab jlcpcb --assembly --schematic ${{ matrix.schematic }} --ignore J2,P1,P2,J3,U5 ${{ matrix.board }} ${{ matrix.name }}
 
     - name: upload results
       uses: actions/upload-artifact@v2
