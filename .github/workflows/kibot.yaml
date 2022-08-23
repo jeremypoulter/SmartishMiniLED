@@ -122,8 +122,8 @@ jobs:
           done
           rm -rf artifacts/$asset
         done
-        mv artifacts/SmartishMiniLED-docs/SmartishMiniLED-schematic.pdf artifacts/SmartishMiniLED-schematic-$version.pdf
-        for asset in SmartishMiniLED-docs
+        mv artifacts/SmartishMiniLED_docs/SmartishMiniLED-schematic.pdf artifacts/SmartishMiniLED-schematic-$version.pdf
+        for asset in SmartishMiniLED_docs
         do
           rm -rf artifacts/$asset
         done
