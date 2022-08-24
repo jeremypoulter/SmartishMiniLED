@@ -80,6 +80,7 @@
 
   (property "date" "2022-08-03")
   (property "version" "bd43bc3")
+  (property "version_name" "v1.1")
 
   (net 0 "")
   (net 1 "VBUS")
@@ -1875,7 +1876,7 @@
   )
 
   (gr_rect (start 166 116) (end 136 56) (layer "Edge.Cuts") (width 0.05) (fill none) (tstamp a158f26d-8bac-4034-8575-beea289ee03b))
-  (gr_text "v1.0" (at 149.606 68.3904) (layer "B.SilkS") (tstamp 039b296c-6df1-4085-90c1-00a56cee3a33)
+  (gr_text "${version_name}" (at 151.2 68.4) (layer "B.SilkS") (tstamp 039b296c-6df1-4085-90c1-00a56cee3a33)
     (effects (font (size 1 1) (thickness 0.2)) (justify mirror))
   )
   (gr_text "+5v" (at 148.43619 62.032) (layer "B.SilkS") (tstamp 0964c761-2e99-424c-b649-96f4ac78cfa7)
@@ -1902,7 +1903,7 @@
   (gr_text "5V" (at 149.3 110.1) (layer "B.SilkS") (tstamp bf07c699-e800-40f1-88a7-991234c0ffdc)
     (effects (font (size 0.6 0.6) (thickness 0.125)) (justify mirror))
   )
-  (gr_text "Smartish MiniLED" (at 149.352 66.1044) (layer "B.SilkS") (tstamp d7cb01bd-b49b-42c4-a0f6-0ed8af051a2d)
+  (gr_text "Smartish MiniLED" (at 151 66) (layer "B.SilkS") (tstamp d7cb01bd-b49b-42c4-a0f6-0ed8af051a2d)
     (effects (font (size 1.5 1.5) (thickness 0.3) italic) (justify mirror))
   )
   (gr_text "Button" (at 140.3 104.1 -90) (layer "B.SilkS") (tstamp f36c9583-4b63-4607-83eb-7db6b27bbf5e)

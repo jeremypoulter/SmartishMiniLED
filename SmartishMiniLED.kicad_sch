@@ -5,9 +5,9 @@
   (paper "A4")
 
   (title_block
-    (title "SmartishNight")
+    (title "SmartishMiniLED")
     (date "2020-11-03")
-    (rev "1.2")
+    (rev "${version_name}")
   )
 
   (lib_symbols
