@@ -21,7 +21,7 @@ on:
 env:
   KIKIT: docker run --rm -v $PWD:/pcb -w /pcb --user $UID:$GROUPS yaqwsx/kikit kikit
   schema: SmartishMiniLED.kicad_sch
-  board: SmartishMiniLED..kicad_pcb
+  board: SmartishMiniLED.kicad_pcb
   dir: output
   config: kibot.yml
 
