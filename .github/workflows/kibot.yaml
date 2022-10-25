@@ -23,6 +23,7 @@ env:
   schema: "*.kicad_sch"
   board: "*.kicad_pcb"
   dir: output
+  config: kibot.yml
 
 jobs:
 # checks
@@ -36,6 +37,7 @@ jobs:
         with:
           schema: ${{ env.schema }}
           board: ${{ env.board }}
+          config: ${{ env.config }}
           skip: run_drc
           targets: __NONE__
 
@@ -49,6 +51,7 @@ jobs:
         with:
           schema: ${{ env.schema }}
           board: ${{ env.board }}
+          config: ${{ env.config }}
           skip: run_erc
           targets: __NONE__
 
@@ -65,6 +68,7 @@ jobs:
           install3D: YES
           schema: ${{ env.schema }}
           board: ${{ env.board }}
+          config: ${{ env.config }}
           dir: ${{ env.dir }}
           skip: run_erc,run_drc
           targets: ibom.html octopart.csv schematic.pdf schematic.svg board_top.pdf board_bottom.pdf model.step
