@@ -19,7 +19,7 @@ on:
       - 'jlcpcb/*'
 
 env:
-  KIKIT: docker run --rm -v $PWD:/pcb -w /pcb --user $UID:$GROUPS yaqwsx/kikit kikit
+  KIKIT: docker run --rm -v $PWD:/pcb -w /pcb --user $UID:$GROUPS yaqwsx/kikit
   schema: SmartishMiniLED.kicad_sch
   board: SmartishMiniLED.kicad_pcb
   dir: output
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: INTI-CMNB/KiBot@v2_k7
         with:
@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: INTI-CMNB/KiBot@v2_k7
         with:
@@ -61,7 +61,7 @@ jobs:
     needs: [ ERC, DRC ]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: INTI-CMNB/KiBot@v2_k7
         with:
@@ -97,7 +97,7 @@ jobs:
             schematic: SmartishMiniLED.kicad_sch
             board: SmartishMiniLED.kicad_pcb
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Export JLCPCB fabrication files
       run: |
