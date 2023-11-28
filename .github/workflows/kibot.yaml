@@ -19,7 +19,7 @@ on:
       - 'jlcpcb/*'
 
 env:
-  KIKIT: docker run --rm -v $PWD:/pcb -w /pcb --user $UID:$GROUPS yaqwsx/kikit
+  KIKIT: docker run --rm -v $PWD:/pcb -w /pcb --user $UID:$GROUPS yaqwsx/kikit:v1.3.0-v7
   schema: SmartishMiniLED.kicad_sch
   board: SmartishMiniLED.kicad_pcb
   dir: output
