@@ -32,3 +32,6 @@ fp-info-cache
 *.pdf
 *.drl
 *.gbrjob
+
+\#auto_saved_files#
+*.lck
