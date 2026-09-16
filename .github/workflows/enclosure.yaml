@@ -1,0 +1,41 @@
+name: Enclosure
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+    paths:
+      - 'enclosure/**'
+      - '.github/workflows/enclosure.yaml'
+  pull_request:
+    paths:
+      - 'enclosure/**'
+      - '.github/workflows/enclosure.yaml'
+  workflow_dispatch:
+
+jobs:
+  stl:
+    name: STL
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install OpenSCAD
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends openscad
+
+      - name: Check clearances
+        run: ./enclosure/build.sh --check
+
+      - name: Render STLs
+        run: ./enclosure/build.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{github.event.repository.name}}_enclosure
+          if-no-files-found: error
+          path: enclosure/stl/*.stl
