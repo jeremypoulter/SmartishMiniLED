@@ -11,12 +11,14 @@ on:
       - '**.kicad_pcb'
       - '.github/workflows/*'
       - 'jlcpcb/*'
+      - 'enclosure/**'
   pull_request:
     paths:
       - '**.kicad_sch'
       - '**.kicad_pcb'
       - '.github/workflows/*'
       - 'jlcpcb/*'
+      - 'enclosure/**'
 
 env:
   KIKIT: docker run --rm -v $PWD:/pcb -w /pcb --user $UID:$GROUPS yaqwsx/kikit:v1.3.0-v7
@@ -110,6 +112,31 @@ jobs:
         path: |
           ${{ matrix.name }}/*.zip
           ${{ matrix.name }}/*.csv
+
+  enclosure:
+    name: Enclosure
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install OpenSCAD
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends openscad
+
+    - name: Check clearances
+      run: ./enclosure/build.sh --check
+
+    - name: Render STLs
+      run: ./enclosure/build.sh
+
+    - name: upload results
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{github.event.repository.name}}_enclosure
+        if-no-files-found: error
+        path: enclosure/stl/*.stl
 
   release:
     name: Release

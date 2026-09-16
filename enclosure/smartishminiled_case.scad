@@ -11,6 +11,9 @@
 //                   sealed IR/LED windows, compression grommet cable entries
 //                   and four M3 screws through the PCB mounting holes
 //
+//  U5 (IR receiver) and SW2 (button) are usually left unpopulated, so the
+//  window and the button are off by default - see ir_window / button.
+//
 //  Everything prints without support material: the parting line sits exactly
 //  on the top face of the PCB, so every wall opening (USB, IR, cable entries)
 //  is a notch that is open at the parting line in both halves.
@@ -34,9 +37,16 @@ pcb_t       = 1.6;      // board thickness
 hole_inset  = 3.5;      // mounting hole centres, in from each corner
 hole_d      = 3.2;      // mounting hole diameter
 
+/* [Optional parts] */
+// U5 and SW2 are not fitted on a standard build (they are in the "ignore" list
+// for assembly), so neither feature is cut by default.
+// Turning the IR window on also widens the case by 1.5 mm, which is the room
+// the MINICAST package needs where it hangs over the board edge.
+ir_window   = false;    // window in the left wall for the IR receiver U5
+button      = false;    // way through the floor to the button SW2
+
 /* [Internal envelope] */
 // Air gap between the board edge and the inner wall.
-gap_left    = 2.2;      // X<0   - IR receiver U5 overhangs the edge by 1.22
 gap_right   = 0.7;      // X>30
 gap_back    = 4.0;      // Y>60  - wiring chamber for the LED strip tails
 gap_front   = 0.8;      // Y<0   - "usb" variant (connector sits on the edge)
@@ -115,6 +125,9 @@ wall       = sealed ? wall_seal : wall_std;
 floor_th   = sealed ? floor_seal : floor_t;
 use_screws = sealed ? true : screws;
 use_ears   = sealed ? true : mount_ears;
+
+// U5 overhangs the left board edge by 1.22 mm, but only if it is fitted
+gap_left = ir_window ? 2.2 : 0.7;
 
 x0 = -gap_left;                 // inner face, left
 x1 = pcb_w + gap_right;         // inner face, right (main body)
@@ -295,6 +308,7 @@ module usb_cut() {
 // IR receiver window (U5) in the left wall.
 module ir_cut() {
     depth = sealed ? wall - 0.8 : wall + 3;   // outdoor keeps a 0.8 mm skin
+    if (ir_window)
     translate([x0 + 1, 19.5, ir_z]) rotate([0, -90, 0])
         linear_extrude(height = depth + 1)
             rotate([0, 0, -90]) slot_prof(ir_w, ir_h, 1.2);
@@ -401,7 +415,8 @@ btn_recess_h = 1.2;
 z_memb = z_bot + memb_t;                  // inside face of the membrane
 
 module button_cuts() {
-    if (sealed) {
+    // With SW2 not fitted the floor simply stays solid.
+    if (button && sealed) {
         // The membrane is printed straight onto the bed - no recess, no
         // bridging - so its outside face comes out smooth and watertight.
         // A shallow engraved ring marks it.
@@ -419,7 +434,7 @@ module button_cuts() {
                 cylinder(h = 0.3 + eps, d = memb_d - 0.6);
                 translate([0, 0, -eps]) cylinder(h = 0.4 + 2 * eps, d = 5.6);
             }
-    } else {
+    } else if (button) {
         // Finger dish in the outside face, 45 deg walls so it prints on the
         // bed; the plunger face ends up just below the outside of the case.
         translate([btn_x, btn_y, z_bot - eps])
@@ -431,7 +446,7 @@ module button_cuts() {
 }
 
 module button_adds() {
-    if (sealed)
+    if (button && sealed)
         translate([btn_x, btn_y, z_memb - eps])
             cylinder(h = z_act - btn_gap - z_memb + eps, d = 5.0);
 }
@@ -582,7 +597,8 @@ module pcb_mock() {
             part_box(10.71, 21.75, 36.21, 39.75, 3.3);            // U1 + antenna
             part_box(10.53,  0.54, 19.47,  7.84, 3.3);                // J1 USB-C
             part_box( 0.93,  8.05,  3.47, 13.13, 8.6);                // J2 header
-            part_box(-1.22, 16.98,  3.58, 21.98, 4.0);                // U5 IR
+            if (ir_window)
+                part_box(-1.22, 16.98, 3.58, 21.98, 4.0);              // U5 IR
             part_box(11.93, 44.30, 14.93, 48.90, 2.4);                // D1
             part_box(13.40, 12.90, 23.80, 20.30, 2.0);                // U3
             part_box(12.00, 26.75, 18.00, 35.25, -sw_h, -pcb_t);      // SW2
@@ -601,13 +617,14 @@ else if (part == "assembly") {
     base();
     color("#7799dd", 0.55) lid();
     pcb_mock();
-    if (!sealed) color("orange") plunger_placed();
+    if (button && !sealed) color("orange") plunger_placed();
 }
 else if (part == "exploded") {
     base();
     translate([0, 0, 30]) color("#7799dd") lid();
     translate([0, 0, 12]) pcb_mock();
-    if (!sealed) translate([0, 0, -12]) color("orange") plunger_placed();
+    if (button && !sealed)
+        translate([0, 0, -12]) color("orange") plunger_placed();
 }
 else if (part == "section") {
     difference() {
@@ -615,7 +632,7 @@ else if (part == "section") {
             base();
             color("#7799dd") lid();
             pcb_mock();
-            if (!sealed) color("orange") plunger_placed();
+            if (button && !sealed) color("orange") plunger_placed();
         }
         translate([-100, -100, z_bot - 10]) cube([200, 100 + 15, 100]);
     }
@@ -627,7 +644,7 @@ else if (part == "clashcheck") {
 else if (part == "fitcheck") {
     // Must be empty: any solid here is the case fouling the board.
     intersection() {
-        union() { base(); lid(); if (!sealed) plunger_placed(); }
+        union() { base(); lid(); if (button && !sealed) plunger_placed(); }
         pcb_mock();
     }
 }

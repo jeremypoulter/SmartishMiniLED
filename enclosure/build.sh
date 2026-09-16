@@ -14,6 +14,7 @@ SCAD=${OPENSCAD:-openscad}
 SRC=smartishminiled_case.scad
 OUT=${OUT:-stl}
 VARIANTS=${VARIANTS:-"usb hardwired outdoor"}
+EXTRA=""
 
 render() {   # render <variant> <part> <file>
     echo "  $3"
@@ -25,10 +26,11 @@ render() {   # render <variant> <part> <file>
 # A check part is an intersection that must come out empty. Faces that merely
 # touch show up as a degenerate solid with no volume, so the test is on volume,
 # not on whether OpenSCAD produced a result at all.
-check() {    # check <variant> <part> <what>
+check() {    # check <variant> <part> <what>; $EXTRA adds -D overrides
     local stl vol
     stl=$(mktemp -u --suffix=.stl)
-    "$SCAD" -o "$stl" -D "variant=\"$1\"" -D "part=\"$2\"" "$SRC" >/dev/null 2>&1 || true
+    # shellcheck disable=SC2086
+    "$SCAD" -o "$stl" -D "variant=\"$1\"" -D "part=\"$2\"" $EXTRA "$SRC" >/dev/null 2>&1 || true
     if vol=$(python3 stl_volume.py "$stl" 0.01); then
         echo "  ok    $1: $3"
         rm -f "$stl"
@@ -41,10 +43,18 @@ check() {    # check <variant> <part> <what>
 do_check() {
     echo "Checking:"
     local rc=0
+    EXTRA=""
     for v in $VARIANTS; do
         check "$v" fitcheck   "case clears the populated board" || rc=1
         check "$v" clashcheck "lid clears the base"             || rc=1
     done
+    # and again with the optional features switched on
+    EXTRA="-D ir_window=true -D button=true"
+    for v in $VARIANTS; do
+        check "$v" fitcheck   "clears the board, IR window + button" || rc=1
+        check "$v" clashcheck "lid clears the base, IR window + button" || rc=1
+    done
+    EXTRA=""
     return $rc
 }
 
