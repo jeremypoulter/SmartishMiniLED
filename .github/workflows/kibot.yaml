@@ -21,7 +21,7 @@ on:
       - 'enclosure/**'
 
 env:
-  KIKIT: docker run --rm -v $PWD:/pcb -w /pcb --user $UID:$GROUPS yaqwsx/kikit:v1.3.0-v7
+  KIKIT: docker run --rm -v $PWD:/pcb -w /pcb --user $UID:$GROUPS yaqwsx/kikit:v1.8.1-v9
   schema: SmartishMiniLED.kicad_sch
   board: SmartishMiniLED.kicad_pcb
   dir: output
@@ -33,28 +33,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: INTI-CMNB/KiBot@v2_k7
+      - uses: INTI-CMNB/KiBot@v2_k9
         with:
           schema: ${{ env.schema }}
           board: ${{ env.board }}
           config: ${{ env.config }}
-          skip: run_drc
+          skip: drc
           targets: __NONE__
 
   DRC:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: INTI-CMNB/KiBot@v2_k7
+      - uses: INTI-CMNB/KiBot@v2_k9
         with:
           schema: ${{ env.schema }}
           board: ${{ env.board }}
           config: ${{ env.config }}
-          skip: run_erc
+          skip: erc
           targets: __NONE__
 
 # documentation
@@ -63,19 +63,19 @@ jobs:
     needs: [ ERC, DRC ]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: INTI-CMNB/KiBot@v2_k7
+      - uses: INTI-CMNB/KiBot@v2_k9
         with:
           install3D: YES
           schema: ${{ env.schema }}
           board: ${{ env.board }}
           config: ${{ env.config }}
           dir: ${{ env.dir }}
-          skip: run_erc,run_drc
+          skip: erc,drc
           targets: ibom.html octopart.csv schematic.pdf schematic.svg board_top.pdf board_bottom.pdf model.step
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v7
         if: ${{success()}}
         with:
           name: ${{github.event.repository.name}}_docs
@@ -99,14 +99,19 @@ jobs:
             schematic: SmartishMiniLED.kicad_sch
             board: SmartishMiniLED.kicad_pcb
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Export JLCPCB fabrication files
       run: |
-        ${{ env.KIKIT }} fab jlcpcb --assembly --schematic ${{ matrix.schematic }} --ignore J2,P1,P2,J3,U5 ${{ matrix.board }} ${{ matrix.name }}
+        # --no-drc: this job already needs [ ERC, DRC ], which run the same
+        # check with the project's DRC exclusions (kibot.yml preflight.drc.filters)
+        # applied. kikit's own internal DRC has no such exclusion mechanism -
+        # it's a plain pass/fail - so it would otherwise re-fail on the J1
+        # false positive that's already accepted upstream.
+        ${{ env.KIKIT }} fab jlcpcb --no-drc --assembly --schematic ${{ matrix.schematic }} --ignore J2,P1,P2,J3,U5 ${{ matrix.board }} ${{ matrix.name }}
 
     - name: upload results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ matrix.name }}
         path: |
@@ -147,9 +152,12 @@ jobs:
 
     if: startsWith(github.ref, 'refs/tags/v')
 
+    permissions:
+      contents: write
+
     steps:
     - name: Download the built assets
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v8
       with:
         path: artifacts
 
@@ -176,9 +184,8 @@ jobs:
         find artifacts
 
     - name: Upload assets to latest release
-      uses: "marvinpinto/action-automatic-releases@latest"
+      uses: softprops/action-gh-release@v3
       with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
         prerelease: ${{ contains(github.ref, '-rc') }}
         files: |
           artifacts/*.zip
