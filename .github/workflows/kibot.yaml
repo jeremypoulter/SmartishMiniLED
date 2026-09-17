@@ -101,7 +101,12 @@ jobs:
 
     - name: Export JLCPCB fabrication files
       run: |
-        ${{ env.KIKIT }} fab jlcpcb --assembly --schematic ${{ matrix.schematic }} --ignore J2,P1,P2,J3,U5 ${{ matrix.board }} ${{ matrix.name }}
+        # --no-drc: this job already needs [ ERC, DRC ], which run the same
+        # check with the project's DRC exclusions (kibot.yml preflight.filters)
+        # applied. kikit's own internal DRC has no such exclusion mechanism -
+        # it's a plain pass/fail - so it would otherwise re-fail on the J1
+        # false positive that's already accepted upstream.
+        ${{ env.KIKIT }} fab jlcpcb --no-drc --assembly --schematic ${{ matrix.schematic }} --ignore J2,P1,P2,J3,U5 ${{ matrix.board }} ${{ matrix.name }}
 
     - name: upload results
       uses: actions/upload-artifact@v7
