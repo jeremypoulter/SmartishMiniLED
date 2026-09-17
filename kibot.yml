@@ -15,21 +15,31 @@ preflight:
     - name: "version"
       command: git describe --exact-match --tags 2> /dev/null || git rev-parse --short HEAD
   update_xml: true
-  run_erc: true
-  run_drc: true
+  # erc/drc replace the KiCad-7 run_erc/run_drc preflights (needs KiCad 8+):
+  # they call `kicad-cli sch erc` / `kicad-cli pcb drc` directly instead of
+  # driving the GUI through KiAuto, and each takes its own `filters:` list
+  # rather than sharing the preflight-level one (still supported, but
+  # deprecated in favour of this - see the warning it prints otherwise).
+  erc: true
+  drc:
+    filters:
+      - filter: 'J1 is a hybrid USB-C receptacle: SMD signal pads plus four
+          through-hole shield/ground legs that get soldered in the same SMT
+          reflow pass (0.6 mm drill). Declaring it "smd" is correct so it
+          stays in the JLCPCB position file; KiCad flags the mix anyway.'
+        regex: 'Footprint J1\b'
+        error: 'footprint_type_mismatch'
+      # - filter: 'suppress courtyards overlap'
+      #   regex: 'Courtyards overlap'
+      #   error: 'courtyards_overlap'
+      # - filter: 'suppress clearance violation'
+      #   regex: 'Clearance violation'
+      #   error: 'clearance'
+      # - filter: 'suppress board edge clearance violation'
+      #   regex: 'Board edge clearance violation'
+      #   error: 'copper_edge_clearance'
   check_zone_fills: true
-  ignore_unconnected: false
 #  update_qr: true
-  # filters:
-  #   - filter: 'suppress courtyards overlap'
-  #     regex: 'Courtyards overlap'
-  #     error: 'courtyards_overlap'
-  #   - filter: 'suppress clearance violation'
-  #     regex: 'Clearance violation'
-  #     error: 'clearance'
-  #   - filter: 'suppress board edge clearance violation'
-  #     regex: 'Board edge clearance violation'
-  #     error: 'copper_edge_clearance'
 
 filters:
   - name: "exclude_any"
