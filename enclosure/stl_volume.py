@@ -7,8 +7,8 @@ test is that the result has no volume, not that it has no facets.
 
     stl_volume.py FILE [MAX]   exit 1 if the volume is above MAX (default 0.01)
 
-A file that does not exist counts as zero - OpenSCAD writes nothing when a
-result really is empty.
+Missing files are errors. The caller must distinguish a confirmed empty
+OpenSCAD result from a failed render before calling this script.
 """
 import re
 import struct
@@ -39,10 +39,7 @@ def volume(tris):
 def main(argv):
     path = argv[1]
     limit = float(argv[2]) if len(argv) > 2 else 0.01
-    try:
-        vol = volume(read_stl(path))
-    except FileNotFoundError:
-        vol = 0.0
+    vol = volume(read_stl(path))
     print(f"{vol:.4f}")
     return 1 if vol > limit else 0
 

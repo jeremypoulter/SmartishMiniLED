@@ -5,8 +5,8 @@
 //
 //  Three variants:
 //    "usb"        - USB-C receptacle (J1) exposed through the front wall
-//    "hardwired"  - no USB opening, power cable clamped into a strain relief
-//                   snout and soldered to the J4 pads on the bottom of the PCB
+//    "hardwired"  - no USB opening, power cable tied onto a cable saddle
+//                   and soldered to the J4 pads on the bottom of the PCB
 //    "outdoor"    - hardwired + silicone cord gasket, sealed membrane button,
 //                   sealed IR/LED windows, compression grommet cable entries
 //                   and four M3 screws through the PCB mounting holes
@@ -28,7 +28,7 @@
 // Which case to build
 variant = "usb";        // [usb, hardwired, outdoor]
 // Which piece to render / export
-part    = "base";       // [base, lid, plunger, assembly, exploded, section, fitcheck, clashcheck]
+part    = "base";       // [base, lid, plunger, assembly, exploded, section, fitcheck, clashcheck, cablecheck]
 
 /* [PCB] */
 pcb_w       = 30.0;     // board width  (X)
@@ -47,7 +47,8 @@ button      = false;    // way through the floor to the button SW2
 
 /* [Internal envelope] */
 // Air gap between the board edge and the inner wall.
-gap_right   = 0.7;      // X>30
+side_gap    = 1.2;      // left board edge; space for the snap fingers to flex
+gap_right   = 1.2;      // X>30
 gap_back    = 4.0;      // Y>60  - wiring chamber for the LED strip tails
 gap_front   = 0.8;      // Y<0   - "usb" variant (connector sits on the edge)
 tail_front  = 8.0;      // Y<0   - hardwired/outdoor wiring chamber
@@ -77,16 +78,20 @@ fin_w       = 7.0;      // snap finger width
 fin_h       = 5.8;      // snap finger length
 fin_t_root  = 1.30;     // tapered for a lower peak strain
 fin_t_tip   = 0.90;
-fin_barb    = 0.45;     // barb height (0.30 of it is live engagement)
-fit_clr     = 0.30;     // running clearance between the two halves
+fin_barb    = 0.45;     // barb height (0.20 of it is live engagement)
+fin_clr     = 0.25;     // clearance from the finger face to its pocket
+fit_clr     = 0.40;     // lip clearance and clearance on each side of a finger
 
 /* [Cables] */
 cable_d_led = 4.5;      // LED strip tail, at Y=60
 cable_d_pwr = 5.0;      // power tail, at Y=0 (hardwired / outdoor)
-snout_len   = 5.0;      // strain relief snout length
+snout_len   = 5.0;      // outdoor grommet housing length
 grommet_d   = 8.0;      // outdoor: silicone tube / rubber grommet OD
 grommet_l   = 8.0;
-tie_slot    = true;     // internal cable tie anchor
+tie_slot    = true;     // external cable saddle with paired cable tie slots
+saddle_len  = 14.0;     // projection beyond the wall
+tie_w       = 3.5;      // slot length for a 2.5 mm wide cable tie
+tie_t       = 1.8;      // slot width for the tie thickness
 
 /* [Openings] */
 usb_w       = 13.0;     // clears the moulded boot of a USB-C plug
@@ -100,9 +105,9 @@ led_win_d   = 2.6;      // status LED windows (D2, D3) in the lid
 /* [Hardware] */
 screws      = false;    // M3 countersunk, through the PCB mounting holes
 gasket_d    = 2.0;      // silicone cord gasket diameter (outdoor)
-mount_ears  = false;    // four flat mounting lugs (always on for outdoor)
+mount_ears  = true;     // four flat mounting lugs; optional on every variant
 ear_t       = 3.0;
-ear_out     = 7.0;      // how far a lug sticks out past the wall
+ear_out     = 10.0;     // projection; keeps the screw head clear of the wall
 ear_w       = 11.0;
 ear_hole_d  = 4.3;
 
@@ -124,10 +129,10 @@ hardwire = (variant == "hardwired") || sealed;
 wall       = sealed ? wall_seal : wall_std;
 floor_th   = sealed ? floor_seal : floor_t;
 use_screws = sealed ? true : screws;
-use_ears   = sealed ? true : mount_ears;
+use_ears   = mount_ears;
 
 // U5 overhangs the left board edge by 1.22 mm, but only if it is fitted
-gap_left = ir_window ? 2.2 : 0.7;
+gap_left = side_gap + (ir_window ? 1.5 : 0);
 
 x0 = -gap_left;                 // inner face, left
 x1 = pcb_w + gap_right;         // inner face, right (main body)
@@ -143,9 +148,10 @@ z_top       = top_gap + ceil_t;     // outside of the lid
 barb_h    = 1.6;                    // height of the barb on each finger
 snap_play = 0.05;                   // lost motion in the closed snap
 rebate_t = lip_t + fit_clr;         // the base wall is set back by this much
-pocket_t = fin_t_root + 0.25;       // local set back at each snap finger
-groove_t = pocket_t + fin_barb + 0.10;
-fin_face = pocket_t - 0.15;         // the outer face of a finger rides here
+fin_face = fin_t_root + 0.10;       // outer face, independent of pocket clearance
+pocket_t = fin_face + fin_clr;
+groove_t = fin_face + fin_barb + fin_clr;
+entry_len = max(sealed ? snout_len : 0, tie_slot ? saddle_len : 0);
 
 // mounting hole centres
 holes = [ [hole_inset, hole_inset],
@@ -155,12 +161,9 @@ holes = [ [hole_inset, hole_inset],
 
 // snap fingers: [x, y, rotation] - the finger grows along +Y of its own frame,
 // which after the rotation points out of the wall it belongs to.
-fingers = concat(
+fingers =
     [ [x0,  9.0,  90], [x0, 52.0,  90],          // left wall
-      [x1,  9.0, -90], [x1, 52.0, -90],          // right wall
-      [ 8.0, y1,   0], [23.0, y1,   0] ],        // back wall
-    hardwire ? [ [8.0, y0, 180], [23.0, y0, 180] ]
-             : [ [4.5, y0, 180], [24.5, y0, 180] ] );
+      [x1,  9.0, -90], [x1, 52.0, -90] ];       // right wall
 
 // cable entries: [x, y of the outer wall face, outward direction, bore]
 entries = concat(
@@ -169,7 +172,7 @@ entries = concat(
 
 echo(str("variant=", variant,
          "  body X=", (lobe ? lobe_x : x1) + wall - (x0 - wall),
-         "  Y=", (y1 + wall) - (y0 - wall) + snout_len * len(entries),
+         "  Y=", (y1 + wall) - (y0 - wall) + entry_len * len(entries),
          "  Z=", z_top - z_bot));
 
 // ---------------------------------------------------------------------------
@@ -210,10 +213,9 @@ module clip_upper() {
 // ---------------------------------------------------------------------------
 //  Cable entries
 // ---------------------------------------------------------------------------
-// Tapered snout. Every face is at 45 deg or steeper, so both halves print
-// without support even though the snout is cantilevered off the wall.
+// Outdoor grommet housing. The taper is 45 degrees for support-free printing.
 module snout(cx, cy, dir, d) {
-    d_tip  = d + 3.0;
+    d_tip  = max(d, grommet_d) + 3.0;
     root   = 1.5;                       // buried in the wall, welds the snout on
     intersection() {
         translate([cx, cy - dir * root, 0]) rotate([dir > 0 ? -90 : 90, 0, 0])
@@ -223,54 +225,50 @@ module snout(cx, cy, dir, d) {
     }
 }
 
-// Bore with three gripping ribs. The ribs are 0.45 mm proud of the bore and
-// bite into the cable jacket when the two halves are closed.
+// Start just beyond the outer tip and cut INWARDS through the wall and lip.
+// The cable tie supplies the grip; the bore has clearance for the jacket.
 module bore(cx, cy, dir, d) {
-    total = snout_len + wall + 3;
-    translate([cx, cy + dir * snout_len, 0]) rotate([dir > 0 ? -90 : 90, 0, 0])
-        difference() {
-            union() {
-                cylinder(h = total, d = d + 0.3);
-                if (sealed)                        // compression grommet seat
-                    cylinder(h = grommet_l, d = grommet_d - 0.6);
-            }
-            if (!sealed)
-                for (p = [snout_len + 0.8,
-                          snout_len + wall / 2,
-                          snout_len + wall - 0.8])
-                    translate([0, 0, p])
-                        difference() {
-                            cylinder(h = 0.9, d = d + 2);
-                            translate([0, 0, -eps])
-                                cylinder(h = 0.9 + 2 * eps, d = d - 0.6);
-                        }
-        }
+    translate([cx, cy + dir * (entry_len + eps), 0])
+        rotate([dir > 0 ? 90 : -90, 0, 0])
+            cylinder(h = entry_len + wall + 2 + eps, d = d + 0.3);
+    if (sealed)
+        translate([cx, cy + dir * (snout_len + eps), 0])
+            rotate([dir > 0 ? 90 : -90, 0, 0])
+                cylinder(h = grommet_l + eps, d = grommet_d - 0.6);
 }
 
-module cable_snouts() { for (e = entries) snout(e[0], e[1], e[2], e[3]); }
+module cable_snouts() { if (sealed) for (e = entries) snout(e[0], e[1], e[2], e[3]); }
 module cable_bores()  { for (e = entries) bore (e[0], e[1], e[2], e[3]); }
 
-// Cable tie anchor: the tie passes through the slot, around the cable, and
-// pulls it down onto the rib. The slot has a 45 deg roof so it self supports.
-module tie_rib(cx, cy, d) {
-    h_top = -d / 2 - 0.15;
-    w = 9; t = 3;
-    translate([cx, cy, z_floor_top - eps]) {
+// Base-only saddle, like a two-slot cable clamp. Thread a tie down one slot,
+// through the recessed underside channel and up the other, then over the
+// jacket. The anchor is outside the wall (also outside the outdoor seal).
+// Its flat bottom prints on the bed; the underside channel has 45 degree
+// shoulders and only a 1.8 mm bridge, and recesses the tie for wall mounting.
+module cable_saddle(cx, cy, dir, d) {
+    slot_x = (d + 0.3) / 2 + 2.0;
+    half_w = slot_x + tie_t / 2 + 2.0;
+    tie_y = saddle_len - tie_w / 2 - 2.0;
+    translate([cx, cy, 0]) rotate([0, 0, dir > 0 ? 0 : 180])
         difference() {
-            translate([-w / 2, -t / 2, 0])
-                cube([w, t, h_top - z_floor_top + eps]);
-            translate([0, 0, (h_top - z_floor_top) / 2 - 0.4]) rotate([90, 0, 0])
-                linear_extrude(height = t + 2, center = true)
-                    polygon([[-2.1, -1.0], [2.1, -1.0], [2.1, 0.4],
-                             [0, 2.5], [-2.1, 0.4]]);
+            translate([0, 0, z_bot]) linear_extrude(height = -z_bot)
+                rrect(-half_w, -1.5, half_w, saddle_len, 1.0);
+            for (x = [-slot_x, slot_x])
+                translate([x - tie_t / 2, tie_y - tie_w / 2, z_bot - eps])
+                    cube([tie_t, tie_w, -z_bot + 2 * eps]);
+            translate([0, tie_y, z_bot]) rotate([90, 0, 90])
+                linear_extrude(height = 2 * half_w + 2, center = true)
+                    polygon([[-tie_w / 2 - 1.15, -eps],
+                             [ tie_w / 2 + 1.15, -eps],
+                             [ tie_w / 2 - 0.85, 2.0],
+                             [-tie_w / 2 + 0.85, 2.0]]);
         }
-    }
 }
 
-module tie_ribs() {
+module cable_saddles() {
     if (tie_slot)
         for (e = entries)
-            tie_rib(e[0], e[1] - e[2] * (wall + 2.2), e[3]);
+            cable_saddle(e[0], e[1], e[2], e[3]);
 }
 
 // ---------------------------------------------------------------------------
@@ -361,7 +359,7 @@ module fingers() {
 
 // Pocket + catch groove in the base wall for one finger.
 module finger_pocket() {
-    w = fin_w + 0.5;
+    w = fin_w + 2 * fit_clr;
     translate([-w / 2, -eps, -fin_h - 0.4])
         cube([w, pocket_t + eps, fin_h + 0.4]);
     translate([-w / 2, -eps, -fin_h - 0.4])
@@ -371,6 +369,15 @@ module finger_pocket() {
 module finger_pockets() {
     for (f = fingers)
         translate([f[0], f[1], 0]) rotate([0, 0, f[2]]) finger_pocket();
+}
+
+// Interrupt the alignment lip around each finger so it can bend over its
+// full length instead of being braced by the bottom 2.2 mm of the lip.
+module finger_lip_clearances() {
+    for (f = fingers)
+        translate([f[0], f[1], 0]) rotate([0, 0, f[2]])
+            translate([-fin_w / 2 - fit_clr, -eps, -lip_h - eps])
+                cube([fin_w + 2 * fit_clr, lip_t + 2 * eps, lip_h + 2 * eps]);
 }
 
 // ---------------------------------------------------------------------------
@@ -524,10 +531,10 @@ module base() {
             clip_lower() cable_snouts();            // added before the rim is cut
             ears();
             standoffs();
-            tie_ribs();
+            cable_saddles();
         }
         // continuous rebate for the lid lip, cut as a ring so it cannot eat
-        // the stand-offs or the tie ribs
+        // the stand-offs
         translate([0, 0, -lip_h - 0.3])
             linear_extrude(height = lip_h + 0.3 + eps)
                 difference() {
@@ -553,12 +560,15 @@ module lid() {
                     linear_extrude(height = z_ceil + eps) inner2d();
             }
             // continuous alignment lip
-            translate([0, 0, -lip_h])
-                linear_extrude(height = lip_h)
-                    difference() {
-                        offset(r = lip_t) inner2d();
-                        inner2d();
-                    }
+            difference() {
+                translate([0, 0, -lip_h])
+                    linear_extrude(height = lip_h)
+                        difference() {
+                            offset(r = lip_t) inner2d();
+                            inner2d();
+                        }
+                finger_lip_clearances();
+            }
             fingers();
             lid_bosses();
             clip_upper() cable_snouts();
@@ -574,7 +584,7 @@ module lid() {
 //  Mock board, used for the clearance check and the assembly preview
 // ---------------------------------------------------------------------------
 module part_box(x0_, y0_, x1_, y1_, h, z = 0) {
-    translate([x0_, y0_, z]) cube([x1_ - x0_, y1_ - y0_, h]);
+    translate([x0_, y0_, z + min(0, h)]) cube([x1_ - x0_, y1_ - y0_, abs(h)]);
 }
 
 // The real board keeps a 6 mm disc clear around every mounting hole, which is
@@ -646,5 +656,16 @@ else if (part == "fitcheck") {
     intersection() {
         union() { base(); lid(); if (button && !sealed) plunger_placed(); }
         pcb_mock();
+    }
+}
+else if (part == "cablecheck") {
+    // Independent cable-sized probes must pass from inside the wall to beyond
+    // each saddle. This catches a blocked bore even when the PCB fits fine.
+    intersection() {
+        union() { base(); lid(); }
+        for (e = entries)
+            translate([e[0], e[1] - e[2] * (wall + 1), 0])
+                rotate([e[2] > 0 ? -90 : 90, 0, 0])
+                    cylinder(h = wall + entry_len + 2, d = e[3]);
     }
 }
