@@ -149,6 +149,7 @@ jobs:
     needs: 
       - docs
       - fabrications
+      - enclosure
 
     if: startsWith(github.ref, 'refs/tags/v')
 
@@ -181,6 +182,12 @@ jobs:
         do
           rm -rf artifacts/$asset
         done
+        for file in artifacts/SmartishMiniLED_enclosure/*.stl
+        do
+          name=$(basename "$file" .stl)
+          mv "$file" "artifacts/SmartishMiniLED-enclosure-${name#smartishminiled_}-$version.stl"
+        done
+        rm -rf artifacts/SmartishMiniLED_enclosure
         find artifacts
 
     - name: Upload assets to latest release
@@ -192,3 +199,4 @@ jobs:
           artifacts/*.csv
           artifacts/*.pdf
           artifacts/*.step
+          artifacts/*.stl
