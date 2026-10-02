@@ -38,7 +38,7 @@ and the case comes out with a solid floor and a plain left wall:
 | IR window | off | `-D ir_window=true` | 6 × 6 mm window in the left wall, and 1.5 mm more side clearance, which the MINICAST package needs where it hangs over the board edge. **Set this if U5 is fitted**, window or not. |
 | Button | off | `-D button=true` | way through the floor to SW2: a captive printed plunger, or on `outdoor` a moulded-in membrane that keeps the case sealed. |
 
-The images above show an earlier revision, before the compact ribbon-cable exits.
+The images above are the default build.
 
 ## What the board dictates
 
@@ -113,6 +113,8 @@ twist a spudger or a small screwdriver in one of those. Take the screws out
 first on the outdoor version.
 
 ## Cable relief
+
+![ribbon cable exit and tie saddle](img/cable_exit.png)
 
 Each cable entry is an unobstructed opening through the wall. A saddle projects
 from the base below it, with two slots and a recessed underside channel for a
@@ -192,6 +194,9 @@ openscad -o outdoor_lid.stl -D 'variant="outdoor"' -D 'part="lid"' \
 ```
 
 Needs OpenSCAD (`apt install openscad`) and python3.
+
+`./render_images.sh` regenerates the pictures in `img/` (it uses `xvfb-run` if
+there is no display).
 
 The `Enclosure` job in the Fabrication workflow runs the same checks and builds
 the same STLs on every change under `enclosure/`, and uploads them as the
