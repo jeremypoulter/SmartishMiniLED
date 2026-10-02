@@ -83,13 +83,15 @@ fin_clr     = 0.25;     // clearance from the finger face to its pocket
 fit_clr     = 0.40;     // lip clearance and clearance on each side of a finger
 
 /* [Cables] */
-cable_d_led = 4.5;      // LED strip tail, at Y=60
+cable_w_led = 8.0;      // three-core ribbon width; P1/P2 pads span 7.3 mm
+cable_h_led = 2.5;      // ribbon thickness, at Y=60
 cable_d_pwr = 5.0;      // power tail, at Y=0 (hardwired / outdoor)
 snout_len   = 5.0;      // outdoor grommet housing length
 grommet_d   = 8.0;      // outdoor: silicone tube / rubber grommet OD
 grommet_l   = 8.0;
+ribbon_seal_t = 1.5;    // outdoor: thickness of a matching flat silicone seal
 tie_slot    = true;     // external cable saddle with paired cable tie slots
-saddle_len  = 14.0;     // projection beyond the wall
+saddle_len  = 8.0;      // projection beyond the wall (outdoor clears the housing)
 tie_w       = 3.5;      // slot length for a 2.5 mm wide cable tie
 tie_t       = 1.8;      // slot width for the tie thickness
 
@@ -151,7 +153,8 @@ rebate_t = lip_t + fit_clr;         // the base wall is set back by this much
 fin_face = fin_t_root + 0.10;       // outer face, independent of pocket clearance
 pocket_t = fin_face + fin_clr;
 groove_t = fin_face + fin_barb + fin_clr;
-entry_len = max(sealed ? snout_len : 0, tie_slot ? saddle_len : 0);
+saddle_projection = sealed ? max(saddle_len, snout_len + tie_w + 2) : saddle_len;
+entry_len = max(sealed ? snout_len : 0, tie_slot ? saddle_projection : 0);
 
 // mounting hole centres
 holes = [ [hole_inset, hole_inset],
@@ -165,10 +168,10 @@ fingers =
     [ [x0,  9.0,  90], [x0, 52.0,  90],          // left wall
       [x1,  9.0, -90], [x1, 52.0, -90] ];       // right wall
 
-// cable entries: [x, y of the outer wall face, outward direction, bore]
+// cable entries: [x, y of outer wall face, direction, width, height, flat]
 entries = concat(
-    [ [15.0, y1 + wall,  1, cable_d_led] ],
-    hardwire ? [ [15.0, y0 - wall, -1, cable_d_pwr] ] : [] );
+    [ [15.0, y1 + wall,  1, cable_w_led, cable_h_led, true] ],
+    hardwire ? [ [15.0, y0 - wall, -1, cable_d_pwr, cable_d_pwr, false] ] : [] );
 
 echo(str("variant=", variant,
          "  body X=", (lobe ? lobe_x : x1) + wall - (x0 - wall),
@@ -213,46 +216,62 @@ module clip_upper() {
 // ---------------------------------------------------------------------------
 //  Cable entries
 // ---------------------------------------------------------------------------
-// Outdoor grommet housing. The taper is 45 degrees for support-free printing.
-module snout(cx, cy, dir, d) {
-    d_tip  = max(d, grommet_d) + 3.0;
+// The ribbon lies across X, with its thickness across the joint in Z.
+module cable_profile(w, h, flat) {
+    if (flat) rrect(-w / 2, -h / 2, w / 2, h / 2, min(0.4, h / 4, w / 4));
+    else circle(d = w);
+}
+
+// Outdoor seal housing, tapered at 45 degrees for support-free printing.
+module snout(cx, cy, dir, w, h, flat) {
+    tip_w = flat ? w + 2 * ribbon_seal_t + 3 : max(w, grommet_d) + 3;
+    tip_h = flat ? h + 2 * ribbon_seal_t + 3 : tip_w;
     root   = 1.5;                       // buried in the wall, welds the snout on
     intersection() {
         translate([cx, cy - dir * root, 0]) rotate([dir > 0 ? -90 : 90, 0, 0])
-            cylinder(h = snout_len + root,
-                     d1 = d_tip + 2 * (snout_len + root), d2 = d_tip);
+            hull() {
+                linear_extrude(height = eps)
+                    cable_profile(tip_w + 2 * (snout_len + root),
+                                  tip_h + 2 * (snout_len + root), flat);
+                translate([0, 0, snout_len + root - eps])
+                    linear_extrude(height = eps) cable_profile(tip_w, tip_h, flat);
+            }
         translate([-200, -200, z_bot]) cube([400, 400, z_top - z_bot]);
     }
 }
 
 // Start just beyond the outer tip and cut INWARDS through the wall and lip.
 // The cable tie supplies the grip; the bore has clearance for the jacket.
-module bore(cx, cy, dir, d) {
+module bore(cx, cy, dir, w, h, flat) {
     translate([cx, cy + dir * (entry_len + eps), 0])
         rotate([dir > 0 ? 90 : -90, 0, 0])
-            cylinder(h = entry_len + wall + 2 + eps, d = d + 0.3);
+            linear_extrude(height = entry_len + wall + 2 + eps)
+                cable_profile(w + 0.3, h + 0.3, flat);
     if (sealed)
         translate([cx, cy + dir * (snout_len + eps), 0])
             rotate([dir > 0 ? 90 : -90, 0, 0])
-                cylinder(h = grommet_l + eps, d = grommet_d - 0.6);
+                linear_extrude(height = grommet_l + eps)
+                    cable_profile(flat ? w + 2 * ribbon_seal_t - 0.6 : grommet_d - 0.6,
+                                  h + 2 * ribbon_seal_t - 0.6, flat);
 }
 
-module cable_snouts() { if (sealed) for (e = entries) snout(e[0], e[1], e[2], e[3]); }
-module cable_bores()  { for (e = entries) bore (e[0], e[1], e[2], e[3]); }
+module cable_snouts() { if (sealed) for (e = entries) snout(e[0], e[1], e[2], e[3], e[4], e[5]); }
+module cable_bores()  { for (e = entries) bore (e[0], e[1], e[2], e[3], e[4], e[5]); }
 
 // Base-only saddle, like a two-slot cable clamp. Thread a tie down one slot,
 // through the recessed underside channel and up the other, then over the
 // jacket. The anchor is outside the wall (also outside the outdoor seal).
 // Its flat bottom prints on the bed; the underside channel has 45 degree
 // shoulders and only a 1.8 mm bridge, and recesses the tie for wall mounting.
-module cable_saddle(cx, cy, dir, d) {
-    slot_x = (d + 0.3) / 2 + 2.0;
-    half_w = slot_x + tie_t / 2 + 2.0;
-    tie_y = saddle_len - tie_w / 2 - 2.0;
+module cable_saddle(cx, cy, dir, w, h) {
+    slot_x = (w + 0.3) / 2 + tie_t / 2 + 0.6;
+    half_w = slot_x + tie_t / 2 + 1.2;
+    tie_y = saddle_projection - tie_w / 2 - 1.5;
+    saddle_top = -h / 2 - 0.15;   // flat support just below the cable jacket
     translate([cx, cy, 0]) rotate([0, 0, dir > 0 ? 0 : 180])
         difference() {
-            translate([0, 0, z_bot]) linear_extrude(height = -z_bot)
-                rrect(-half_w, -1.5, half_w, saddle_len, 1.0);
+            translate([0, 0, z_bot]) linear_extrude(height = saddle_top - z_bot)
+                rrect(-half_w, -1.5, half_w, saddle_projection, 1.0);
             for (x = [-slot_x, slot_x])
                 translate([x - tie_t / 2, tie_y - tie_w / 2, z_bot - eps])
                     cube([tie_t, tie_w, -z_bot + 2 * eps]);
@@ -268,7 +287,7 @@ module cable_saddle(cx, cy, dir, d) {
 module cable_saddles() {
     if (tie_slot)
         for (e = entries)
-            cable_saddle(e[0], e[1], e[2], e[3]);
+            cable_saddle(e[0], e[1], e[2], e[3], e[4]);
 }
 
 // ---------------------------------------------------------------------------
@@ -666,6 +685,7 @@ else if (part == "cablecheck") {
         for (e = entries)
             translate([e[0], e[1] - e[2] * (wall + 1), 0])
                 rotate([e[2] > 0 ? -90 : 90, 0, 0])
-                    cylinder(h = wall + entry_len + 2, d = e[3]);
+                    linear_extrude(height = wall + entry_len + 2)
+                        cable_profile(e[3], e[4], e[5]);
     }
 }

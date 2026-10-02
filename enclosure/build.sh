@@ -93,6 +93,11 @@ do_check() {
     for v in $VARIANTS; do
         check "$v" cablecheck "cable entries open without saddles or lugs" || rc=1
     done
+    # Ribbon dimensions are independent: also exercise a wider/thicker cable.
+    EXTRA=(-D cable_w_led=12 -D cable_h_led=3.5)
+    for v in $VARIANTS; do
+        check "$v" cablecheck "12 x 3.5 mm ribbon path is open" || rc=1
+    done
     EXTRA=()
     return $rc
 }

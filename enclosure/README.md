@@ -22,7 +22,7 @@ Everything is generated from one OpenSCAD file,
 | Sealing | none | none | 2 mm silicone cord gasket, blind LED windows, blind IR window and membrane button if those are enabled |
 | Button (optional) | printed plunger | printed plunger | moulded-in flexing membrane |
 | Mounting lugs | optional, on by default | optional, on by default | optional, on by default |
-| Body size (mm) | 44.6 × 84.8 × 21.7 | 44.6 × 106.0 × 21.7 | 49.4 × 110.8 × 22.7 |
+| Body size (mm) | 44.6 × 78.8 × 21.7 | 44.6 × 94.0 × 21.7 | 49.4 × 103.8 × 22.7 |
 
 Lengths include the cable-tie saddles; widths include the antenna lobe but not
 the optional mounting lugs. Add 1.5 mm to the width with `ir_window=true`.
@@ -38,7 +38,7 @@ and the case comes out with a solid floor and a plain left wall:
 | IR window | off | `-D ir_window=true` | 6 × 6 mm window in the left wall, and 1.5 mm more side clearance, which the MINICAST package needs where it hangs over the board edge. **Set this if U5 is fitted**, window or not. |
 | Button | off | `-D button=true` | way through the floor to SW2: a captive printed plunger, or on `outdoor` a moulded-in membrane that keeps the case sealed. |
 
-The images above are the default build.
+The images above show an earlier revision, before the compact ribbon-cable exits.
 
 ## What the board dictates
 
@@ -54,7 +54,7 @@ corner nearest the IR receiver):
 | **U5 IR receiver** | overhangs the left edge by 1.2 mm and looks sideways out of it | 6 × 6 mm window in the left wall, on the parting line - *optional, off by default* |
 | J1 USB-C | on the front edge, opening 3.3 mm above the board | 13 × 7.8 mm opening, big enough for the moulded boot of a plug, with a lead-in flare |
 | J4 power pads | **underside**, right behind the USB connector | hardwired variants get an 8 mm wiring chamber at that end so the cable can curve down and back under the board |
-| P1/P2 LED strip pads, J3 terminal block | far end of the board | 4 mm wiring chamber, cable snout in line with the pads |
+| P1/P2 LED strip pads, J3 terminal block | far end of the board; P1/P2 span 7.3 mm across three pads | 4 mm wiring chamber, 8 mm wide ribbon-cable exit in line with the pads |
 | C6 (10 mm can), J3 (10.2 mm) | tallest parts | 11.6 mm of headroom under the lid |
 | SW2 | underside, middle of the board | button in the floor - *optional, off by default* |
 | D2/D3 status LEDs | far end, top side | 2.6 mm windows in the lid roof |
@@ -67,7 +67,7 @@ corner nearest the IR receiver):
 * The base has a completely flat outside face: no feet, no protruding bosses.
   The screw heads go into 90° countersinks, which are 45° cones.
 * The lid prints roof-down; its bosses, lip and snap fingers all point up.
-* The outdoor grommet housings are 45° cones where they meet the wall, so they
+* The outdoor seal housings have 45° tapers where they meet the wall, so they
   are self supporting even though they stick out into mid air.
 * Each cable-tie saddle prints with the base. Its recessed tie channel has 45°
   shoulders and bridges only 1.8 mm.
@@ -119,14 +119,20 @@ from the base below it, with two slots and a recessed underside channel for a
 small cable tie. The tie clamps the cable to the saddle so pull is taken by the
 base rather than by the solder joints. Set `tie_slot=false` to omit the saddles.
 
-The bores are 4.5 mm (LED strip) and 5.0 mm (power) plus 0.3 mm clearance. Change
-`cable_d_led` and `cable_d_pwr` to match the cable you actually have.
+The LED exit takes a flat three-core ribbon **8 mm wide × 2.5 mm thick**, plus
+0.3 mm clearance in each dimension. This is wider than the 7.3 mm copper-pad span
+of P1/P2 (2 × 2.85 mm pitch + 1.6 mm pad width). The saddle has a flat support
+surface and projects only **8 mm**, rather than the previous 14 mm. On the outdoor
+variant it projects 10.5 mm to keep the tie slots clear of the seal housing.
 
-On the **outdoor** variant the bore opens out into a seat for a compression
-grommet: push a 10 mm length of 8 mm OD silicone tube (or a rubber grommet) over
-the cable, sit it in the seat, and tightening the screws squeezes it onto the
-jacket. If you would rather use an off-the-shelf gland, set `grommet_d` to the
-thread diameter of a PG7 / M12 gland and fit the nut inside.
+Change `cable_w_led` and `cable_h_led` to match your ribbon. The power entry remains
+round, 5 mm plus 0.3 mm clearance, controlled by `cable_d_pwr`.
+
+On the **outdoor** variant the LED exit has a matching rounded-rectangular seat
+for a flat silicone seal, with nominal 1.5 mm seal thickness and 0.6 mm total
+compression allowance. A round silicone tube is **not** a suitable seal for the
+ribbon exit; fit a matching seal and test for leaks before outdoor use. The round
+power entry retains its seat for an 8 mm OD silicone tube or rubber grommet.
 
 ## Bill of materials
 
@@ -134,7 +140,7 @@ thread diameter of a PG7 / M12 gland and fit the nut inside.
 |---|---|
 | `usb` | 2 printed parts. Optional: the plunger if you build with `button=true`, 1 small cable tie |
 | `hardwired` | 2 printed parts. Optional: the plunger if you build with `button=true`, 2 cable ties |
-| `outdoor` | 2 printed parts, ~250 mm of 2 mm silicone O-ring cord, 4 × M3 × 16 countersunk machine screws (self tapping into the printed bosses), 2 × grommet or 8 mm silicone tube, 4 × screws to mount it |
+| `outdoor` | 2 printed parts, ~250 mm of 2 mm silicone O-ring cord, 4 × M3 × 16 countersunk machine screws (self tapping into the printed bosses), matching flat LED cable seal, power grommet or 8 mm silicone tube, 2 cable ties, optional mounting screws |
 
 Optional for any variant: two 3 mm acrylic rods, 11.5 mm long, as light pipes for
 the status LEDs - set `led_win_d = 3.1` first.
@@ -147,11 +153,14 @@ line: `openscad -D 'variant="outdoor"' -D 'part="lid"' -o lid.stl smartishminile
 | Parameter | Default | Notes |
 |---|---|---|
 | `variant` | `"usb"` | `usb`, `hardwired`, `outdoor` |
-| `part` | `"base"` | `base`, `lid`, `plunger`, `assembly`, `exploded`, `section`, `fitcheck`, `clashcheck` |
+| `part` | `"base"` | `base`, `lid`, `plunger`, `assembly`, `exploded`, `section`, `fitcheck`, `clashcheck`, `cablecheck` |
 | `ir_window` | `false` | window for U5 - also adds the side clearance the package needs |
 | `button` | `false` | way through the floor to SW2 |
 | `bot_gap` / `top_gap` | 4.5 / 11.6 | clearance under and over the board |
-| `cable_d_led` / `cable_d_pwr` | 4.5 / 5.0 | cable jacket diameters |
+| `cable_w_led` / `cable_h_led` | 8.0 / 2.5 | LED ribbon width / thickness; opening adds 0.3 mm clearance |
+| `cable_d_pwr` | 5.0 | round power cable jacket diameter |
+| `saddle_len` | 8.0 | cable-tie saddle projection; outdoor extends as needed to clear the seal housing |
+| `ribbon_seal_t` | 1.5 | outdoor ribbon seal thickness; requires a matching flat seal |
 | `sw_h` | 3.0 | how far SW2 stands off the underside of the board - **measure yours**; it sets the plunger and membrane travel (only used with `button=true`) |
 | `lobe` | `true` | set `false` only if U1 is not fitted; with it fitted the antenna does not fit inside a plain box |
 | `screws` | `false` | add the M3 screws to an indoor variant |
@@ -200,7 +209,8 @@ intersections that have to come out empty:
 
 `build.sh --check` renders these for all three variants with the default options,
 with the IR window and button on and mounting lugs off, and with both saddles and
-lugs off. It fails if an intersection has volume or OpenSCAD fails. Faces that
+lugs off. Cable-path checks also exercise a 12 × 3.5 mm ribbon override. It fails
+if an intersection has volume or OpenSCAD fails. Faces that
 merely touch are fine; anything with volume is a collision.
 
 `part="assembly"`, `part="exploded"` and `part="section"` render the case with
