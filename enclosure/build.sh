@@ -81,6 +81,7 @@ do_check() {
         check "$v" fitcheck   "case clears the populated board" || rc=1
         check "$v" clashcheck "lid clears the base"             || rc=1
         check "$v" cablecheck "cable entries are open"           || rc=1
+        check "$v" lidpathcheck "lid drops over a fitted cable"  || rc=1
     done
     # and again with the optional features switched on
     EXTRA=(-D ir_window=true -D button=true -D mount_ears=false)
@@ -97,6 +98,7 @@ do_check() {
     EXTRA=(-D cable_w_led=12 -D cable_h_led=3.5)
     for v in $VARIANTS; do
         check "$v" cablecheck "12 x 3.5 mm ribbon path is open" || rc=1
+        check "$v" lidpathcheck "lid drops over a 12 x 3.5 mm ribbon" || rc=1
     done
     EXTRA=()
     return $rc

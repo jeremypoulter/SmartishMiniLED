@@ -69,8 +69,9 @@ corner nearest the IR receiver):
 * The lid prints roof-down; its bosses, lip and snap fingers all point up.
 * The outdoor seal housings have 45° tapers where they meet the wall, so they
   are self supporting even though they stick out into mid air.
-* Each cable-tie saddle prints with the base. Its recessed tie channel has 45°
-  shoulders and bridges only 1.8 mm.
+* Each cable-tie saddle prints with the base. Its recessed tie channel has a
+  peaked 45° roof, so nothing is bridged, and it stops 2 mm short of the far edge
+  so a solid strip sits on the bed there.
 * The only down-facing features left are the 0.45 mm ledges of the snap barbs
   and their catch grooves, plus, if you enable the button, a 1.9 mm ledge round
   the finger dish. Nothing needs bridging over more than 2 mm.
@@ -162,6 +163,7 @@ line: `openscad -D 'variant="outdoor"' -D 'part="lid"' -o lid.stl smartishminile
 | `cable_w_led` / `cable_h_led` | 8.0 / 2.5 | LED ribbon width / thickness; opening adds 0.3 mm clearance |
 | `cable_d_pwr` | 5.0 | round power cable jacket diameter |
 | `saddle_len` | 8.0 | cable-tie saddle projection; outdoor extends as needed to clear the seal housing |
+| `tie_foot` | 2.0 | solid saddle left on the bed beyond the tie channel, for bed adhesion |
 | `ribbon_seal_t` | 1.5 | outdoor ribbon seal thickness; requires a matching flat seal |
 | `sw_h` | 3.0 | how far SW2 stands off the underside of the board - **measure yours**; it sets the plunger and membrane travel (only used with `button=true`) |
 | `lobe` | `true` | set `false` only if U1 is not fitted; with it fitted the antenna does not fit inside a plain box |
@@ -205,16 +207,18 @@ the same STLs on every change under `enclosure/`, and uploads them as the
 ## Checks
 
 The model carries a mock of the populated board - every part tall enough to
-matter, including the overhanging antenna and the IR receiver - and three
+matter, including the overhanging antenna and the IR receiver - and four
 intersections that have to come out empty:
 
 * `part="fitcheck"` - the assembled case against the populated board;
 * `part="clashcheck"` - the lid against the base;
-* `part="cablecheck"` - cable-sized probes against every cable path.
+* `part="cablecheck"` - cable-sized probes against every cable path;
+* `part="lidpathcheck"` - the lid against the cable, lowered onto a base whose
+  cable is already fitted, so the lid never has to be threaded over the cable.
 
 `build.sh --check` renders these for all three variants with the default options,
 with the IR window and button on and mounting lugs off, and with both saddles and
-lugs off. Cable-path checks also exercise a 12 × 3.5 mm ribbon override. It fails
+lugs off. Cable-path and lid-path checks also exercise a 12 × 3.5 mm ribbon override. It fails
 if an intersection has volume or OpenSCAD fails. Faces that
 merely touch are fine; anything with volume is a collision.
 

@@ -28,7 +28,7 @@
 // Which case to build
 variant = "usb";        // [usb, hardwired, outdoor]
 // Which piece to render / export
-part    = "base";       // [base, lid, plunger, assembly, exploded, section, fitcheck, clashcheck, cablecheck]
+part    = "base";       // [base, lid, plunger, assembly, exploded, section, fitcheck, clashcheck, cablecheck, lidpathcheck]
 
 /* [PCB] */
 pcb_w       = 30.0;     // board width  (X)
@@ -94,6 +94,7 @@ tie_slot    = true;     // external cable saddle with paired cable tie slots
 saddle_len  = 8.0;      // projection beyond the wall (outdoor clears the housing)
 tie_w       = 3.5;      // slot length for a 2.5 mm wide cable tie
 tie_t       = 1.8;      // slot width for the tie thickness
+tie_foot    = 2.0;      // solid saddle left on the bed beyond the tie channel
 
 /* [Openings] */
 usb_w       = 13.0;     // clears the moulded boot of a USB-C plug
@@ -258,15 +259,32 @@ module bore(cx, cy, dir, w, h, flat) {
 module cable_snouts() { if (sealed) for (e = entries) snout(e[0], e[1], e[2], e[3], e[4], e[5]); }
 module cable_bores()  { for (e = entries) bore (e[0], e[1], e[2], e[3], e[4], e[5]); }
 
+// The lid is lowered onto a base whose cable is already fitted, so nothing of
+// the lid may lie below the cable where the cable passes through the lip.
+// Extend each exit down through the full height of the lip.
+module lip_relief() {
+    for (e = entries)
+        hull() {
+            for (dz = [0, -lip_h - 0.5])
+                translate([e[0], e[1] - e[2] * (wall + 1), dz])
+                    rotate([e[2] > 0 ? -90 : 90, 0, 0])
+                        linear_extrude(height = wall + 1 + lip_t + 1)
+                            cable_profile(e[3] + 0.3, e[4] + 0.3, e[5]);
+        }
+}
+
 // Base-only saddle, like a two-slot cable clamp. Thread a tie down one slot,
 // through the recessed underside channel and up the other, then over the
 // jacket. The anchor is outside the wall (also outside the outdoor seal).
-// Its flat bottom prints on the bed; the underside channel has 45 degree
-// shoulders and only a 1.8 mm bridge, and recesses the tie for wall mounting.
+// Its flat bottom prints on the bed. The underside channel has a 45 degree
+// peaked roof, so there is nothing to bridge, and it recesses the tie for wall
+// mounting. The channel stops tie_foot short of the far edge, which keeps a
+// solid strip on the bed there.
 module cable_saddle(cx, cy, dir, w, h) {
     slot_x = (w + 0.3) / 2 + tie_t / 2 + 0.6;
     half_w = slot_x + tie_t / 2 + 1.2;
-    tie_y = saddle_projection - tie_w / 2 - 1.5;
+    chan_r = tie_w / 2 + 0.75;          // half width of the channel at the bed
+    tie_y = saddle_projection - chan_r - tie_foot;
     saddle_top = -h / 2 - 0.15;   // flat support just below the cable jacket
     translate([cx, cy, 0]) rotate([0, 0, dir > 0 ? 0 : 180])
         difference() {
@@ -277,10 +295,7 @@ module cable_saddle(cx, cy, dir, w, h) {
                     cube([tie_t, tie_w, -z_bot + 2 * eps]);
             translate([0, tie_y, z_bot]) rotate([90, 0, 90])
                 linear_extrude(height = 2 * half_w + 2, center = true)
-                    polygon([[-tie_w / 2 - 1.15, -eps],
-                             [ tie_w / 2 + 1.15, -eps],
-                             [ tie_w / 2 - 0.85, 2.0],
-                             [-tie_w / 2 + 0.85, 2.0]]);
+                    polygon([[-chan_r, -eps], [chan_r, -eps], [0, chan_r]]);
         }
 }
 
@@ -593,6 +608,7 @@ module lid() {
             clip_upper() cable_snouts();
         }
         common_cuts();
+        lip_relief();
         led_windows();
         screw_cuts();
         pry_notches();
@@ -687,5 +703,20 @@ else if (part == "cablecheck") {
                 rotate([e[2] > 0 ? -90 : 90, 0, 0])
                     linear_extrude(height = wall + entry_len + 2)
                         cable_profile(e[3], e[4], e[5]);
+    }
+}
+else if (part == "lidpathcheck") {
+    // Must be empty: the lid is lowered onto a base whose cable is already in
+    // place, so the volume swept by the cable, as the lid sees it, must be free.
+    intersection() {
+        lid();
+        for (e = entries)
+            hull() {
+                for (dz = [0, -(z_top - z_bot)])
+                    translate([e[0], e[1] - e[2] * (wall + 1), dz])
+                        rotate([e[2] > 0 ? -90 : 90, 0, 0])
+                            linear_extrude(height = wall + entry_len + 2)
+                                cable_profile(e[3], e[4], e[5]);
+            }
     }
 }
