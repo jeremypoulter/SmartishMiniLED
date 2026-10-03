@@ -35,3 +35,6 @@ fp-info-cache
 
 \#auto_saved_files#
 *.lck
+
+# OpenSCAD output
+enclosure/stl/
